@@ -1,0 +1,24 @@
+SELECT ?Movie ?Studio ?Platform ?imdb_id WHERE {
+  # Entitas Film (judul)
+  ?film wdt:P31 wd:Q11424 ;
+  
+  # Studio Produksi
+        wdt:P272 ?studio_uri ;
+  
+  # ID IMDb (sebagai kunci alternatif)
+        wdt:P345 ?imdb_id .
+
+  # Platform Streaming (Opsional)
+  OPTIONAL { ?film wdt:P750 ?platform_uri . }
+
+  # Filter untuk Judul Film berbahasa Inggris 
+  ?film rdfs:label ?Movie .
+  FILTER(LANG(?Movie) = "en")
+
+  SERVICE wikibase:label { 
+    bd:serviceParam wikibase:language "en" . 
+    ?studio_uri rdfs:label ?Studio .
+    ?platform_uri rdfs:label ?Platform .
+  }
+}
+LIMIT 2000
