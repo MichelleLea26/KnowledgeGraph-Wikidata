@@ -1,0 +1,59 @@
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbp: <http://dbpedia.org/property/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT DISTINCT (?label AS ?Movie) ?wiki_url ?Genre ?Director ?Year ?Studio_DBpedia ?Platform_DBpedia
+WHERE {
+  # Entitas Film
+  ?film a dbo:Film ;
+        rdfs:label ?label .
+        
+  OPTIONAL { ?film foaf:isPrimaryTopicOf ?wiki_url . }
+  
+  # Genre Film (opsional)
+  OPTIONAL { 
+    { 
+      ?film dbo:genre ?genre_uri . 
+      ?genre_uri rdfs:label ?Genre . 
+      FILTER (LANG(?Genre) = "en")
+    } 
+    UNION 
+    { 
+      ?film dbp:genre ?genre_raw . 
+      # Ubah data mentah menjadi string agar formatnya sama
+      BIND(STR(?genre_raw) AS ?Genre) 
+    }
+  }
+  
+  OPTIONAL { 
+    ?film dbo:director ?director_uri . 
+    ?director_uri rdfs:label ?Director . 
+    FILTER (LANG(?Director) = "en")
+  }
+  
+  # Tahun Rilis (opsional)
+  OPTIONAL { 
+    { ?film dbo:releaseDate ?date . }
+    UNION
+    { ?film dbp:released ?date . }
+    BIND(SUBSTR(STR(?date), 1, 4) AS ?Year) 
+  }
+
+  # Studio
+  OPTIONAL {
+    ?film dbo:productionCompany ?studio_uri .
+    ?studio_uri rdfs:label ?Studio_DBpedia .
+    FILTER (LANG(?Studio_DBpedia) = "en")
+  }
+
+  # Platform Streaming
+  OPTIONAL {
+    ?film dbo:distributor ?dist_uri .
+    ?dist_uri rdfs:label ?Platform_DBpedia .
+    FILTER (LANG(?Platform_DBpedia) = "en")
+  }
+
+  FILTER (LANG(?label) = "en")
+}
+LIMIT 5000
